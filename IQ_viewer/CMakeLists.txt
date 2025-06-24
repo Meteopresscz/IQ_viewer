@@ -12,6 +12,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
 
+# --- Kiss FFT Integration Start ---
+
+# 1. (Recommended) Set options for the kissfft build.
+#    Build as a static library and disable tools and tests.
+set(KISSFFT_STATIC ON CACHE BOOL "Build kissfft as a static library")
+set(KISSFFT_TOOLS OFF CACHE BOOL "Do not build kissfft command-line tools")
+set(KISSFFT_TEST OFF CACHE BOOL "Do not build kissfft tests")
+
+# 2. Add the kissfft subdirectory. CMake will find and use its CMakeLists.txt.
+add_subdirectory(libs/kissfft)
+
+# --- Kiss FFT Integration End ---
+
 set(TS_FILES IQ_viewer_en_US.ts)
 
 set(PROJECT_SOURCES
@@ -22,34 +35,31 @@ set(PROJECT_SOURCES
         ${TS_FILES}
 )
 
+# This block is now correctly structured for Qt6 vs older versions
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(IQ_viewer
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET IQ_viewer APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
-
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 else()
+    # Fallback for Qt5
     if(ANDROID)
         add_library(IQ_viewer SHARED
             ${PROJECT_SOURCES}
         )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
         add_executable(IQ_viewer
             ${PROJECT_SOURCES}
         )
     endif()
-
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
-target_link_libraries(IQ_viewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+# 3. Link your application with Qt Widgets and the kissfft library.
+#    Using "kissfft::kissfft" is best practice as it's a CMake alias.
+#    CMake will also automatically handle the include directories.
+target_link_libraries(IQ_viewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets kissfft::kissfft)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
