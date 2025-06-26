@@ -9,33 +9,35 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
+# Find Qt modules, including PrintSupport needed by QCustomPlot
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets PrintSupport LinguistTools)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets PrintSupport LinguistTools)
 
 # --- Kiss FFT Integration Start ---
 
-# 1. (Recommended) Set options for the kissfft build.
-#    Build as a static library and disable tools and tests.
+# Set options for the kissfft build (static library, no tools/tests)
 set(KISSFFT_STATIC ON CACHE BOOL "Build kissfft as a static library")
 set(KISSFFT_TOOLS OFF CACHE BOOL "Do not build kissfft command-line tools")
 set(KISSFFT_TEST OFF CACHE BOOL "Do not build kissfft tests")
 
-# 2. Add the kissfft subdirectory. CMake will find and use its CMakeLists.txt.
+# Add the kissfft subdirectory so CMake can find its own CMakeLists.txt
 add_subdirectory(libs/kissfft)
 
 # --- Kiss FFT Integration End ---
 
 set(TS_FILES IQ_viewer_en_US.ts)
 
+# Define all project sources, including the correct path to QCustomPlot
 set(PROJECT_SOURCES
         main.cpp
         iq_viewer.cpp
         iq_viewer.h
         iq_viewer.ui
+        libs/customPlot/qcustomplot.cpp
+        libs/customPlot/qcustomplot.h
         ${TS_FILES}
 )
 
-# This block is now correctly structured for Qt6 vs older versions
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(IQ_viewer
         MANUAL_FINALIZATION
@@ -56,14 +58,20 @@ else()
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
-# 3. Link your application with Qt Widgets and the kissfft library.
-#    Using "kissfft::kissfft" is best practice as it's a CMake alias.
-#    CMake will also automatically handle the include directories.
-target_link_libraries(IQ_viewer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets kissfft::kissfft)
+# --- FIX: Add the include directory for QCustomPlot ---
+# This command tells the compiler to look in this directory for header files.
+target_include_directories(IQ_viewer PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/libs/customPlot"
+)
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
+# Link your application with Qt Widgets, PrintSupport, and kissfft
+target_link_libraries(IQ_viewer PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::PrintSupport
+    kissfft::kissfft
+)
+
+# Bundle identifier for macOS/iOS
 if(${QT_VERSION} VERSION_LESS 6.1.0)
   set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.IQ_viewer)
 endif()
