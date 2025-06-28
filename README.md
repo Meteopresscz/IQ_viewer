@@ -2,6 +2,8 @@
 
 Tool for visualizing I/Q data from software-defined radios and other sources. This application provides a spectrogram display, allowing for basic signal analysis.
 
+![screenshot](https://github.com/Meteopresscz/IQ_viewer/blob/main/readme.png)
+
 ## Features
 
 * **Spectrogram Display**: View I/Q data as a waterfall plot with a configurable color map.
