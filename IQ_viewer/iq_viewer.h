@@ -33,6 +33,10 @@ private slots:
     // clamp slot
     void clampAxisRanges();
 
+    //show dB
+    void on_minLevelSlider_valueChanged(int value);
+    void on_maxLevelSlider_valueChanged(int value);
+
 private:
     void setupUiControls();
     void generateWindow(int type, int size);

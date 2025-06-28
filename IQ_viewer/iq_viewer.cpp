@@ -71,6 +71,10 @@ void IQ_viewer::setupUiControls()
     ui->maxLevelSlider->setRange(-120, 0);
     ui->minLevelSlider->setValue(-100);
     ui->maxLevelSlider->setValue(-20);
+
+    // --- Db values ---
+    on_minLevelSlider_valueChanged(ui->minLevelSlider->value());
+    on_maxLevelSlider_valueChanged(ui->maxLevelSlider->value());
 }
 
 void IQ_viewer::generateWindow(int type, int size)
@@ -101,7 +105,7 @@ void IQ_viewer::generateWindow(int type, int size)
 void IQ_viewer::on_actionOpen_triggered()
 {
     // --- open file ---
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open IQ File"), "", tr("Complex Float32 (*.cf32 *.cfile)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open IQ File"), "", tr("Complex Float32 (*.cf32 *.cfile *.raw)"));
     if (fileName.isEmpty()) {
         return;
     }
@@ -262,4 +266,15 @@ void IQ_viewer::on_colorMapComboBox_currentIndexChanged(int index)
     }
     m_colorMap->setGradient(gradient);
     ui->fftPlot->replot();
+}
+
+// --- dB labels     ---
+void IQ_viewer::on_minLevelSlider_valueChanged(int value)
+{
+    ui->minLevelLabel->setText(QString::number(value) + " dB");
+}
+
+void IQ_viewer::on_maxLevelSlider_valueChanged(int value)
+{
+    ui->maxLevelLabel->setText(QString::number(value) + " dB");
 }
